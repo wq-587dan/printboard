@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import printboard; print\\('version:', printboard.__version__\\)\")",
+      "Bash(pip install *)",
+      "Bash(pytest tests/test_parser.py -v --tb=short)"
+    ]
+  }
+}
