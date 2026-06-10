@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python -c \"import printboard; print\\('version:', printboard.__version__\\)\")",
       "Bash(pip install *)",
-      "Bash(pytest tests/test_parser.py -v --tb=short)"
+      "Bash(pytest tests/test_parser.py -v --tb=short)",
+      "Bash(pytest tests/ -v --tb=short)",
+      "Bash(pytest tests/ --cov=printboard --cov-report=term-missing --fail-under=80)",
+      "Bash(pytest tests/ --cov=printboard --cov-report=term-missing)"
     ]
   }
 }
