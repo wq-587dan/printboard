@@ -36,8 +36,4 @@ jobs:
 
       - name: Test with pytest
         run: |
-          pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-report=xml
-
-      - name: Check coverage threshold
-        run: |
-          pytest tests/ --cov=printboard --cov-report=term-missing --fail-under=80
+          pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-report=xml --cov-fail-under=80

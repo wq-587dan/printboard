@@ -7,7 +7,19 @@
       "Bash(pytest tests/ -v --tb=short)",
       "Bash(pytest tests/ --cov=printboard --cov-report=term-missing --fail-under=80)",
       "Bash(pytest tests/ --cov=printboard --cov-report=term-missing)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(git reset *)",
+      "Bash(git branch *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git stash *)",
+      "Bash(pytest tests/ -v --tb=short -q)",
+      "Bash(git tag -a v0.1.0 -m 'Release v0.1.0 *)",
+      "Bash(git tag *)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(git push *)",
+      "Bash(git remote *)",
+      "Bash(pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-fail-under=80)"
     ]
   }
 }
