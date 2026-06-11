@@ -10,7 +10,6 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-
 # Maximum allowed key length to avoid capturing meaningless long strings.
 _MAX_KEY_LENGTH = 32
 

@@ -27,7 +27,10 @@
       "Bash(pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-fail-under=90)",
       "Bash(git rm *)",
       "Bash(git checkout *)",
-      "Bash(rm -f .claude/plan.md)"
+      "Bash(rm -f .claude/plan.md)",
+      "Bash(black printboard/ tests/ --target-version py38)",
+      "Bash(black printboard/ tests/ --check --diff --target-version py38)",
+      "Bash(pytest tests/ -q --cov=printboard --cov-report=term-missing --cov-fail-under=90)"
     ]
   }
 }
