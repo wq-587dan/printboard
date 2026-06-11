@@ -43,3 +43,6 @@ logs/
 
 # Environment variables
 .env
+
+# Claude memory
+.claude/

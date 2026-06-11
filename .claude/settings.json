@@ -19,7 +19,15 @@
       "Bash(gh repo *)",
       "Bash(git push *)",
       "Bash(git remote *)",
-      "Bash(pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-fail-under=80)"
+      "Bash(pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-fail-under=80)",
+      "Bash(gh run *)",
+      "Bash(black printboard/ tests/ --check --diff)",
+      "Bash(black printboard/ tests/)",
+      "Bash(black printboard/utils.py)",
+      "Bash(pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-fail-under=90)",
+      "Bash(git rm *)",
+      "Bash(git checkout *)",
+      "Bash(rm -f .claude/plan.md)"
     ]
   }
 }

@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/printboard.svg)](https://pypi.org/project/printboard/)
 [![Python](https://img.shields.io/pypi/pyversions/printboard.svg)](https://pypi.org/project/printboard/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/your-org/printboard/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/printboard/actions)
+[![CI](https://github.com/wq-587dan/printboard/actions/workflows/ci.yml/badge.svg)](https://github.com/wq-587dan/printboard/actions)
 
 > 零代码修改的装饰器，将 `print()` 自动桥接到 **TensorBoard**。无需改动任何 print 代码，即可实现训练可视化。
 

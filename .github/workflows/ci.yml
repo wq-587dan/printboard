@@ -6,7 +6,37 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  # Opt into Node.js 24 to avoid deprecation warnings.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Lint with flake8
+        run: |
+          # Fail on syntax errors, undefined names, and other critical issues
+          flake8 printboard/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Style checks (warnings only - don't fail the build)
+          flake8 printboard/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+      - name: Format check with black
+        run: |
+          black printboard/ tests/ --check --diff
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -27,13 +57,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Lint with flake8
-        run: |
-          # Fail on syntax errors or undefined names
-          flake8 printboard/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
-          # Style checks (warnings only)
-          flake8 printboard/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-
       - name: Test with pytest
         run: |
           pytest tests/ -v --cov=printboard --cov-report=term-missing --cov-report=xml --cov-fail-under=80
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/test-action@v3
+        with:
+          use_oidc: true

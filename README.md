@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/printboard.svg)](https://pypi.org/project/printboard/)
 [![Python](https://img.shields.io/pypi/pyversions/printboard.svg)](https://pypi.org/project/printboard/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/your-org/printboard/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/printboard/actions)
+[![CI](https://github.com/wq-587dan/printboard/actions/workflows/ci.yml/badge.svg)](https://github.com/wq-587dan/printboard/actions)
 
 > Zero-code decorator to bridge `print()` to **TensorBoard**. Visualize your training metrics without modifying a single line of print code.
 
