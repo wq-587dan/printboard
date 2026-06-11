@@ -1,5 +1,7 @@
 """Tests for the tb_log decorator and tb_print function."""
 
+from __future__ import annotations
+
 import io
 import os
 import re
