@@ -62,10 +62,25 @@ PrintBoard 自动识别以下常见格式：
 |------|---------|-----------|
 | `key: value` | `loss: 0.3456, acc: 0.92` | 是 |
 | `key=value` | `loss=0.3456, acc=0.92` | 是 |
+| `key:value`（无空格） | `Loss:0.5,Acc:0.9` | 是 |
 | 管道分隔 | `epoch 3 \| loss: 0.3456 \| acc: 0.92` | 是 |
 | 横线分隔 | `Step 100 - loss: 0.3456` | 是 |
+| 进度条 | `1/10 [====] - loss: 0.5` | 是 |
 | 科学计数法 | `lr: 1.5e-4` | 是 |
+| 百分比 | `acc: 95%` | 是 |
+| JSON-like 字典 | `{'loss': 0.3456, 'acc': 0.92}` | 是 |
+| 特殊值 | `loss: nan`，`loss: inf` | 是 |
 | 纯文本 | `训练开始...` | 忽略 |
+
+### 不支持自动解析的格式（使用自定义 Pattern）
+
+以下格式**无法**自动识别，请使用自定义正则表达式处理：
+
+| 格式 | 示例 | 原因 |
+|------|------|------|
+| 自然语言 | `Loss is 0.3456` | 无分隔符（`:` 或 `=`）|
+| 多词 key | `Train Loss: 0.3456` | 只匹配 "Loss"，丢失 "Train" |
+| 无前导零小数 | `.5` | 需要前导数字（`0.5`）|
 
 ## 自定义 Pattern
 
@@ -120,6 +135,14 @@ for epoch in range(100):
 | `step` | `int \| None` | `None` | 步数（不指定则自动递增） |
 | `log_dir` | `str` | `"runs"` | TensorBoard 日志目录 |
 | `also_print` | `bool` | `True` | 是否同时在终端打印 |
+
+### `tb_print_close(log_dir="runs")`
+
+关闭指定日志目录的 tb_print 写入器。将所有待写入的指标刷新到磁盘。
+
+### `tb_print_close_all()`
+
+关闭所有 tb_print 写入器。适用于脚本结束时的清理。
 
 ## 运行 TensorBoard
 

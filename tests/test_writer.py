@@ -2,7 +2,6 @@
 
 import os
 import threading
-import tempfile
 
 from printboard.writer import TBWriter
 
@@ -53,6 +52,20 @@ class TestTBWriterBasic:
 
         writer.close()
 
+    def test_reset_step(self, tmp_path):
+        log_dir = str(tmp_path)
+        writer = TBWriter(log_dir=log_dir)
+
+        writer.get_next_step()
+        writer.get_next_step()
+        assert writer.global_step == 2
+
+        writer.reset_step(100)
+        assert writer.global_step == 100
+        assert writer.get_next_step() == 100
+
+        writer.close()
+
 
 class TestTBWriterCaching:
     """Test writer caching by log directory."""
@@ -64,6 +77,20 @@ class TestTBWriterCaching:
 
         # Both should share the same underlying SummaryWriter.
         assert writer1.writer is writer2.writer
+
+        writer1.close()
+
+    def test_same_log_dir_shares_step_counter(self, tmp_path):
+        log_dir = str(tmp_path)
+        writer1 = TBWriter(log_dir=log_dir)
+        writer2 = TBWriter(log_dir=log_dir)
+
+        step1 = writer1.get_next_step()
+        step2 = writer2.get_next_step()
+
+        # Steps should be sequential, not both 0.
+        assert step1 == 0
+        assert step2 == 1
 
         writer1.close()
 
@@ -194,6 +221,31 @@ class TestTBWriterLifecycle:
         writer2 = TBWriter(log_dir=log_dir)
         assert writer2.writer is not old_writer
         writer2.close()
+
+    def test_writer_persists_across_calls(self, tmp_path):
+        """Test that writer is NOT closed on every decorator-like call."""
+        log_dir = str(tmp_path)
+
+        w1 = TBWriter(log_dir=log_dir)
+        w1.log_scalar("a", 1.0, step=0)
+
+        w2 = TBWriter(log_dir=log_dir)
+        # Should be the same SummaryWriter instance, not a new one.
+        assert w1.writer is w2.writer
+        w2.log_scalar("b", 2.0, step=1)
+
+        w1.close()
+
+    def test_multiple_log_scalar_calls(self, tmp_path):
+        """Test that multiple log_scalar calls accumulate correctly."""
+        log_dir = str(tmp_path)
+        writer = TBWriter(log_dir=log_dir)
+
+        for i in range(10):
+            writer.log_scalar("metric", float(i), step=i)
+
+        writer.close()
+        assert any("events" in f for f in os.listdir(log_dir))
 
 
 class TestTBWriterEdgeCases:

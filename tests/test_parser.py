@@ -21,6 +21,14 @@ class TestKeyValueColon:
         result = parse_print_output("accuracy: 95")
         assert result == {"accuracy": 95.0}
 
+    def test_no_space_after_colon(self):
+        result = parse_print_output("loss:0.5")
+        assert result == {"loss": 0.5}
+
+    def test_space_before_colon(self):
+        result = parse_print_output("loss : 0.5")
+        assert result == {"loss": 0.5}
+
 
 class TestKeyValueEqual:
     """Test key=value format parsing."""
@@ -52,6 +60,11 @@ class TestPipeSeparated:
         assert result["loss"] == 0.1
         assert result["acc"] == 0.95
         assert result["lr"] == 0.001
+
+    def test_pipe_no_spaces(self):
+        result = parse_print_output("|loss:0.1|acc:0.95")
+        assert result["loss"] == 0.1
+        assert result["acc"] == 0.95
 
 
 class TestDashSeparated:
@@ -86,6 +99,91 @@ class TestNegativeValues:
         assert result == {"loss": -0.5}
 
 
+class TestPositiveSign:
+    """Test positive sign value parsing."""
+
+    def test_positive_sign(self):
+        result = parse_print_output("loss: +0.5")
+        assert result == {"loss": 0.5}
+
+
+class TestPercentage:
+    """Test percentage value parsing."""
+
+    def test_percentage_basic(self):
+        result = parse_print_output("acc: 95%")
+        assert result == {"acc": 95.0}
+
+    def test_percentage_decimal(self):
+        result = parse_print_output("acc: 95.5%")
+        assert result == {"acc": 95.5}
+
+
+class TestJsonLike:
+    """Test JSON-like dict output parsing."""
+
+    def test_json_single_quotes(self):
+        result = parse_print_output("{'loss': 0.3456, 'acc': 0.92}")
+        assert result["loss"] == 0.3456
+        assert result["acc"] == 0.92
+
+    def test_json_double_quotes(self):
+        result = parse_print_output('{"loss": 0.3456, "acc": 0.92}')
+        assert result["loss"] == 0.3456
+        assert result["acc"] == 0.92
+
+
+class TestSpecialValues:
+    """Test nan and inf value handling."""
+
+    def test_nan_value(self):
+        result = parse_print_output("loss: nan")
+        assert "loss" in result
+        import math
+
+        assert math.isnan(result["loss"])
+
+    def test_inf_value(self):
+        result = parse_print_output("loss: inf")
+        assert "loss" in result
+        assert result["loss"] == float("inf")
+
+    def test_negative_inf_value(self):
+        result = parse_print_output("loss: -inf")
+        assert "loss" in result
+        assert result["loss"] == float("-inf")
+
+
+class TestTrailingComment:
+    """Test lines with trailing comments."""
+
+    def test_trailing_comment(self):
+        result = parse_print_output("loss: 0.5 # training loss")
+        assert result == {"loss": 0.5}
+
+
+class TestCompactFormats:
+    """Test compact formats without spaces."""
+
+    def test_compact_no_spaces(self):
+        result = parse_print_output("Loss:0.5,Acc:0.9")
+        assert result["Loss"] == 0.5
+        assert result["Acc"] == 0.9
+
+    def test_compact_space_separated(self):
+        result = parse_print_output("loss:0.5 acc:0.9")
+        assert result["loss"] == 0.5
+        assert result["acc"] == 0.9
+
+
+class TestProgressBars:
+    """Test progress bar format parsing."""
+
+    def test_progress_bar_format(self):
+        result = parse_print_output("1/10 [====] - loss: 0.5")
+        assert result == {"loss": 0.5}
+
+
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 
@@ -112,14 +210,21 @@ class TestEdgeCases:
 
     def test_duplicate_keys_takes_last(self):
         result = parse_print_output("loss: 0.5, loss: 0.3")
-        # Last value wins for same key in general pattern.
         assert result["loss"] == 0.3
 
     def test_key_too_long_filtered(self):
         long_key = "a" * 33
         result = parse_print_output(f"{long_key}: 1.0")
-        # Keys longer than 32 chars should be filtered.
         assert long_key not in result
+
+    def test_very_precise_value(self):
+        result = parse_print_output("loss: 0.50000000001")
+        assert abs(result["loss"] - 0.50000000001) < 1e-12
+
+    def test_epoch_only_no_metrics(self):
+        result = parse_print_output("Epoch 1/10")
+        # "Epoch" is not a metric, and 1/10 is not key-value format
+        assert result == {}
 
 
 class TestCustomPattern:
@@ -144,7 +249,6 @@ class TestCustomPattern:
     def test_custom_pattern_named_groups_only(self):
         pattern = re.compile(r"([\d.]+):([\d.]+)")
         result = parse_print_output("0.1:0.2", custom_pattern=pattern)
-        # Non-named groups are ignored.
         assert result == {}
 
 
@@ -159,3 +263,7 @@ class TestMixedFormats:
     def test_pipe_and_general_mixed(self):
         result = parse_print_output("status: ok | loss: 0.1")
         assert result["loss"] == 0.1
+
+    def test_brackets_format(self):
+        result = parse_print_output("[Epoch 1] Loss: 0.3456")
+        assert result["Loss"] == 0.3456

@@ -58,11 +58,26 @@ PrintBoard automatically recognizes these common formats:
 | Format | Example Output | Auto-parsed? |
 |--------|---------------|--------------|
 | `key: value` | `loss: 0.3456, acc: 0.92` | Yes |
-| `key=value` | `loss=0.3456, acc=0.92` | Yes |
+| `key=value` | `loss=0.3456, acc: 0.92` | Yes |
+| `key:value` (no space) | `Loss:0.5,Acc:0.9` | Yes |
 | Pipe-separated | `epoch 3 \| loss: 0.3456 \| acc: 0.92` | Yes |
 | Dash-separated | `Step 100 - loss: 0.3456` | Yes |
+| Progress bar | `1/10 [====] - loss: 0.5` | Yes |
 | Scientific notation | `lr: 1.5e-4` | Yes |
+| Percentage | `acc: 95%` | Yes |
+| JSON-like dict | `{'loss': 0.3456, 'acc': 0.92}` | Yes |
+| Special values | `loss: nan`, `loss: inf` | Yes |
 | Pure text | `Training started...` | Ignored |
+
+### Not Auto-Parsed (Use Custom Pattern)
+
+The following formats are **not** automatically recognized. Use a custom pattern to handle them:
+
+| Format | Example | Why Not? |
+|--------|---------|----------|
+| Natural language | `Loss is 0.3456` | No separator (`:` or `=`) |
+| Multi-word keys | `Train Loss: 0.3456` | Matches only "Loss", loses "Train" |
+| Leading-dot decimals | `.5` | Requires a leading digit (`0.5`) |
 
 ## Custom Pattern
 
@@ -117,6 +132,14 @@ Directly print and log a metric to TensorBoard.
 | `step` | `int \| None` | `None` | Step number (auto-increments if not provided) |
 | `log_dir` | `str` | `"runs"` | Directory for TensorBoard event files |
 | `also_print` | `bool` | `True` | Whether to also print to stdout |
+
+### `tb_print_close(log_dir="runs")`
+
+Close the tb_print writer for the given log directory. Flushes all pending metrics to disk.
+
+### `tb_print_close_all()`
+
+Close all tb_print writers. Useful for cleanup at the end of a script.
 
 ## Running TensorBoard
 

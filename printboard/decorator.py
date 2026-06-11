@@ -16,6 +16,7 @@ from functools import wraps
 from typing import Callable, Optional, Union
 
 from printboard.parser import parse_print_output
+from printboard.utils import sanitize_metric_name
 from printboard.writer import TBWriter
 
 
@@ -51,14 +52,22 @@ class StreamProxy:
         """
         with self._lock:
             self._buffer.write(text)
-            self._original.write(text)
-            self._original.flush()  # Ensure terminal shows output immediately.
+            try:
+                self._original.write(text)
+                self._original.flush()
+            except OSError:
+                # Terminal may be closed or redirected; ignore write errors
+                # to the original stream while preserving the buffer.
+                pass
             return len(text)
 
     def flush(self) -> None:
         """Flush both the original stdout and the internal buffer."""
         with self._lock:
-            self._original.flush()
+            try:
+                self._original.flush()
+            except OSError:
+                pass
             self._buffer.flush()
 
     def fileno(self) -> int:
@@ -161,6 +170,9 @@ def _capture_and_log(
 ) -> None:
     """Parse captured output from buffer and log metrics to TensorBoard.
 
+    The writer is cached by log_dir and NOT closed after each call,
+    so metrics accumulate across multiple function invocations.
+
     Args:
         buffer: StringIO buffer containing captured stdout output.
         log_dir: Directory for TensorBoard event files.
@@ -170,7 +182,7 @@ def _capture_and_log(
     writer = TBWriter(log_dir=log_dir)
 
     if global_step is not None:
-        writer._global_step = global_step
+        writer.reset_step(global_step)
 
     captured = buffer.getvalue()
     lines = captured.splitlines()
@@ -187,8 +199,9 @@ def _capture_and_log(
             step = writer.get_next_step()
             writer.log_scalar(tag=tag, value=value, step=step)
 
-    # Close writer to flush all data to disk.
-    writer.close()
+    # Note: We do NOT close the writer here. It remains cached for
+    # subsequent calls. The atexit handler will close it on program exit,
+    # or the user can call tb_print_close() explicitly.
 
 
 # Global writer instance for tb_print function.
@@ -211,7 +224,8 @@ def tb_print(
     for explicit metric logging.
 
     Args:
-        tag: Metric name (e.g., "loss", "accuracy").
+        tag: Metric name (e.g., "loss", "accuracy"). Invalid characters
+             are automatically replaced with underscores.
         value: Metric value.
         step: Optional step number. If not provided, auto-increments.
         log_dir: Directory for TensorBoard event files.
@@ -221,19 +235,25 @@ def tb_print(
         >>> tb_print("learning_rate", 0.001, step=0)
         learning_rate: 0.001
     """
+    # Sanitize tag for TensorBoard compatibility.
+    safe_tag = sanitize_metric_name(tag)
+
     if also_print:
-        print(f"{tag}: {value}")
+        print(f"{safe_tag}: {value}")
 
     with _tb_print_lock:
         if log_dir not in _tb_print_writers:
             _tb_print_writers[log_dir] = TBWriter(log_dir=log_dir)
 
     writer = _tb_print_writers[log_dir]
-    writer.log_scalar(tag=tag, value=value, step=step)
+    writer.log_scalar(tag=safe_tag, value=value, step=step)
 
 
 def tb_print_close(log_dir: str = "runs") -> None:
     """Close the tb_print writer for the given log directory.
+
+    Call this at the end of your script to ensure all metrics are flushed
+    to disk. If not called, the atexit handler will close writers automatically.
 
     Args:
         log_dir: Directory whose writer should be closed.
